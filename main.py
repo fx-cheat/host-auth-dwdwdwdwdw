@@ -2,7 +2,6 @@ import os
 from flask import Flask, g, session, redirect, request, url_for, jsonify
 from requests_oauthlib import OAuth2Session
 import configparser
-import json
 
 config = configparser.ConfigParser()
 config.sections()
@@ -10,8 +9,7 @@ config.read('config.ini')
 
 OAUTH2_CLIENT_ID = config['CONFIG']['clientid']
 OAUTH2_CLIENT_SECRET =config['CONFIG']['clientsercret']
-PORT = os.getenv('PORT')
-OAUTH2_REDIRECT_URI = f'https://hostinggggauth.herokuapp.com/callback'
+OAUTH2_REDIRECT_URI = 'https://hostinggggauth.herokuapp.com/callback'
 
 API_BASE_URL = os.environ.get('API_BASE_URL', 'https://discordapp.com/api')
 AUTHORIZATION_BASE_URL = API_BASE_URL + '/oauth2/authorize'
@@ -60,6 +58,7 @@ def callback():
     code = request.args
     type(code.to_dict())
     code = code.get("code", default="", type=str)
+    print(code)
     if request.values.get('error'):
         return request.values['error']
     discord = make_session(state=session.get('oauth2_state'))
@@ -68,14 +67,6 @@ def callback():
         client_secret=OAUTH2_CLIENT_SECRET,
         authorization_response=request.url)
     session['oauth2_token'] = token
-    user = discord.get(API_BASE_URL + '/users/@me').json()
-    filename = 'datas.json'
-    with open(filename,'r+') as file:
-        file_data = json.load(file)
-    file_data[user['id']] = code
-    with open(filename,'r+') as file:
-        file.seek(0)
-        json.dump(file_data, file)
     return redirect(url_for('.me'))
 
 @app.route('/me')
@@ -88,4 +79,4 @@ def me():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=PORT)
+    app.run()
